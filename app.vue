@@ -20,6 +20,7 @@ const defNodes: Node[] = [
   { id: 5, label: "Node 5" },
 ];
 const defEdges: Edge[] = [
+  { id: -1, from: 0, to: 0 },
   { id: 1, from: 1, to: 3 },
   { id: 2, from: 1, to: 2 },
   { id: 3, from: 2, to: 4 },
@@ -35,68 +36,94 @@ const network = ref<{
   options: {
     nodes: {
       shape: "circle",
-      size: 32,  // 增大节点尺寸
-      borderWidth: 2.5,  // 加粗边框
-      shadow: {
-        enabled: true,
-        color: 'rgba(147, 197, 253, 0.3)',  // 蓝色阴影
-        size: 10,
-        x: 3,
-        y: 3
-      },
-      color: {
-        background: 'rgba(255, 255, 255, 0.8)',  // 半透明白色背景
-        border: '#93C5FD',  // Tailwind blue-300
-        highlight: {
-          background: 'rgba(255, 255, 255, 0.9)',  // 高亮时更白
-          border: '#3B82F6',  // Tailwind blue-500
-        },
-        hover: {
-          background: 'rgba(219, 234, 254, 0.7)',  // Tailwind blue-100 带透明度
-          border: '#60A5FA'  // Tailwind blue-400
-        }
-      },
+      size: 32, // 增大节点尺寸
+      borderWidth: 2.5, // 加粗边框
       font: {
-        color: '#1E3A8A',  // Tailwind blue-900
+        color: "#1E3A8A",
         size: 14,
-        face: 'Inter, system-ui, sans-serif'  // 与侧边栏字体一致
+        face: "Inter, system-ui, sans-serif",
+        multi: true, // 启用多行文字
+        align: "center", // 文字居中
       },
       shapeProperties: {
         useBorderWithImage: true,
-        borderRadius: 8  // 圆角效果
-      }
+        borderRadius: 8,
+      },
+      // 调整尺寸计算方式
+      scaling: {
+        min: 24,
+        max: 48,
+        label: {
+          enabled: true,
+          min: 12,
+          max: 14,
+          maxVisible: 100,
+          drawThreshold: 8,
+        },
+      },
+      shadow: {
+        enabled: true,
+        color: "rgba(147, 197, 253, 0.3)", // 蓝色阴影
+        size: 10,
+        x: 3,
+        y: 3,
+      },
+      color: {
+        background: "rgba(255, 255, 255)", // 半透明白色背景
+        border: "#93C5FD", // Tailwind blue-300
+        highlight: {
+          background: "rgba(255, 255, 255)", // 高亮时更白
+          border: "#3B82F6", // Tailwind blue-500
+        },
+        hover: {
+          background: "rgba(219, 234, 254)", // Tailwind blue-100 带透明度
+          border: "#60A5FA", // Tailwind blue-400
+        },
+      },
     },
     edges: {
       color: {
-        color: '#BFDBFE',  // Tailwind blue-200
-        highlight: '#3B82F6',  // 高亮时使用蓝色
-        hover: '#60A5FA'
+        color: "#BFDBFE", // Tailwind blue-200
+        highlight: "#3B82F6", // 高亮时使用蓝色
+        hover: "#60A5FA",
       },
       width: 2.5,
       arrows: {
         to: {
           enabled: true,
-          scaleFactor: 0.6  // 箭头大小
-        }
+          scaleFactor: 0.6, // 箭头大小
+        },
       },
       dashes: false,
       shadow: {
         enabled: true,
-        color: 'rgba(147, 197, 253, 0.2)',
-        size: 5
-      }
+        color: "rgba(147, 197, 253, 0.2)",
+        size: 5,
+      },
     },
     // 高亮显示聚焦时的线段
     interaction: {
       hover: true,
       tooltipDelay: 200,
       multiselect: true,
-      selectConnectedEdges: true
-
+      selectConnectedEdges: true,
     },
-   
-  }
+    physics: {
+      stabilization: {
+        enabled: true,
+        iterations: 50,
+      },
+      barnesHut: {
+        gravitationalConstant: -5000, // 更松散的布局
+        springLength: 200,
+      },
+    },
+  },
 });
+// 插入换行符以实现多行文本
+const insertLineBreaks = (str: string, maxLength: number) => {
+  return str.replace(new RegExp(`(.{${maxLength}})`, "g"), "$1\n");
+};
 // 处理网络图事件
 const networkEvent = (...args: any[]) => {
   if (args[0] === "click") {
@@ -118,26 +145,36 @@ const networkEvent = (...args: any[]) => {
 
 // 添加节点
 const addNode = () => {
-  if (myAppDataStore.selectedNode) {
+  if (!network.value.nodes.length) {
     network.value.nodes.push({
-      id:
-        (network.value.nodes[network.value.nodes.length - 1].id as number) + 1,
-      label:
-        "node " +
-        ((network.value.nodes[network.value.nodes.length - 1].id as number) +
-          1),
+      id: 1,
+      label: "Node1",
     });
-    const n1 = myAppDataStore.selectedNode;
-    const n2 = network.value.nodes[network.value.nodes.length - 1].id as number;
-    network.value.edges.push({
-      id:
-        (network.value.edges[network.value.edges.length - 1].id as number) + 1,
-      from: n1,
-      to: n2,
-    });
-  } else {
-    alert("Please select a node first");
+    return;
   }
+  if (!myAppDataStore.selectedNode) {
+    alert("Please select a node first");
+    return;
+  }
+  const newNodeId =
+    (network.value.nodes[network.value.nodes.length - 1].id as number) + 1;
+  const newNodeLabel =
+    "Node " +
+    ((network.value.nodes[network.value.nodes.length - 1].id as number) + 1);
+  const wrappedLabel = insertLineBreaks(newNodeLabel, 8); // 每8字符换行
+  network.value.nodes.push({
+    id: newNodeId,
+    label: wrappedLabel,
+  });
+  const n1 = myAppDataStore.selectedNode;
+  const n2 = network.value.nodes[network.value.nodes.length - 1].id as number;
+  const newEdgeId =
+    (network.value.edges[network.value.edges.length - 1].id as number) + 1;
+  network.value.edges.push({
+    id: newEdgeId,
+    from: n1,
+    to: n2,
+  });
 };
 
 // 切换合并节点的显示状态
@@ -146,7 +183,7 @@ const combineNode = () => {
 };
 
 // 移除节点
-const removeNode = (selectedNodeId: number | null) => {
+const removeNode = (selectedNodeId: number | undefined) => {
   if (selectedNodeId) {
     network.value.nodes.reduce((acc, node) => {
       if (node.id === selectedNodeId) {
@@ -157,7 +194,7 @@ const removeNode = (selectedNodeId: number | null) => {
       }
       return acc + 1;
     }, 0);
-    myAppDataStore.selectedNode = null;
+    myAppDataStore.selectedNode = undefined;
   } else {
     alert("Please select a node first");
   }
@@ -196,24 +233,28 @@ const Combine = () => {
 
   console.log(n1, n2);
   if (n1 && n2) {
+    const newNodeId =
+      (network.value.nodes[network.value.nodes.length - 1].id as number) + 1;
+    const newNodeLabel =
+      "Node " +
+      ((network.value.nodes[network.value.nodes.length - 1].id as number) + 1);
+    const wrappedLabel = insertLineBreaks(newNodeLabel, 8); // 每8字符换行
     network.value.nodes.push({
-      id:
-        (network.value.nodes[network.value.nodes.length - 1].id as number) + 1,
-      label:
-        "node " +
-        ((network.value.nodes[network.value.nodes.length - 1].id as number) +
-          1),
+      id: newNodeId,
+      label: wrappedLabel,
     });
     const n3 = network.value.nodes[network.value.nodes.length - 1].id as number;
+    const newEdgeId1 =
+      (network.value.edges[network.value.edges.length - 1].id as number) + 1;
+    const newEdgeId2 =
+      (network.value.edges[network.value.edges.length - 1].id as number) + 2;
     network.value.edges.push({
-      id:
-        (network.value.edges[network.value.edges.length - 1].id as number) + 1,
+      id: newEdgeId1,
       from: n1.id,
       to: n3,
     });
     network.value.edges.push({
-      id:
-        (network.value.edges[network.value.edges.length - 1].id as number) + 1,
+      id: newEdgeId2,
       from: n2.id,
       to: n3,
     });
@@ -238,7 +279,7 @@ onMounted(() => {
 <template>
   <!-- 主要的模板代码 -->
   <div class="w-screen h-screen relative">
-      <vue-vis-network
+    <vue-vis-network
       ref="networkRef"
       class="w-full bg-white h-full network-background"
       :nodes="network.nodes"
@@ -250,7 +291,7 @@ onMounted(() => {
       @deselect-node="networkEvent('deselectNode', $event)"
     >
     </vue-vis-network>
-  
+
     <aside class="absolute top-10 left-10 z-10 isolate">
       <!-- 主导航 -->
       <nav
@@ -280,7 +321,7 @@ onMounted(() => {
         <!-- Combine Node 按钮 -->
         <button
           @click="combineNode()"
-          class="font-sans px-4 py-2 text-sm font-medium text-blue-900 bg-white/50 hover:bg-blue-200/30 rounded-lg border border-blue-200/50 hover:border-blue-300 transition-colors duration-200 shadow-sm"
+          class="px-4 py-2 text-sm font-medium text-blue-900 bg-white/50 hover:bg-blue-200/30 rounded-lg border border-blue-200/50 hover:border-blue-300 transition-colors duration-200 shadow-sm"
         >
           Combine Node
         </button>
@@ -310,14 +351,16 @@ onMounted(() => {
         class="flex flex-col gap-2 mt-4 px-4 py-3 bg-blue-100/80 backdrop-blur-xs rounded-xl border border-blue-200/50 shadow-lg transition-all duration-200"
         :hidden="myAppDataStore.isHiddenCombineNav"
       >
-        <header class=" font-sans mr-2 text-gl font-bold text-blue-900">Combine</header>
+        <header class="font-sans mr-2 text-gl font-bold text-blue-900">
+          Combine
+        </header>
 
         <!-- Node1 选择 -->
         <div class="w-full space-y-1">
           <label class="text-xs font-bold text-blue-700/90">Node1:</label>
           <select
             name="node1"
-            class="w-full px-2 py-1 text-sm  bg-white/50 rounded-md border border-blue-200/70 focus:ring-1 focus:ring-blue-400 focus:border-blue-400"
+            class="w-full px-2 py-1 text-sm bg-white/50 rounded-md border border-blue-200/70 focus:ring-1 focus:ring-blue-400 focus:border-blue-400"
             v-model="selectedNode1"
           >
             <option disabled :value="null" class="text-blue-900/80">
@@ -371,18 +414,21 @@ onMounted(() => {
 <style scoped>
 /* 网格背景容器 */
 .network-background {
-  background-image: 
-    linear-gradient(rgba(220, 220, 220, 0.15) 1px, transparent 1px),
+  background-image: linear-gradient(
+      rgba(220, 220, 220, 0.15) 1px,
+      transparent 1px
+    ),
     linear-gradient(90deg, rgba(220, 220, 220, 0.15) 1px, transparent 1px);
   background-size: 40px 40px;
   background-position: -1px -1px;
 }
-
 /* 暗色模式适配 */
 @media (prefers-color-scheme: dark) {
   .network-background {
-    background-image: 
-      linear-gradient(rgba(100, 100, 100, 0.15) 1px, transparent 1px),
+    background-image: linear-gradient(
+        rgba(100, 100, 100, 0.15) 1px,
+        transparent 1px
+      ),
       linear-gradient(90deg, rgba(100, 100, 100, 0.15) 1px, transparent 1px);
   }
 }
