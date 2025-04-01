@@ -92,7 +92,7 @@ const network = ref<{
       tooltipDelay: 200,
       multiselect: true,
       selectConnectedEdges: true
-      
+
     },
    
   }
@@ -157,6 +157,7 @@ const removeNode = (selectedNodeId: number | null) => {
       }
       return acc + 1;
     }, 0);
+    myAppDataStore.selectedNode = null;
   } else {
     alert("Please select a node first");
   }
