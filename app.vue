@@ -27,6 +27,35 @@ const defEdges: Edge[] = [
 ];
 
 // 定义网络图的数据和配置
+// const network = ref<{
+//   nodes: Node[];
+//   edges: Edge[];
+//   options: Options;
+// }>({
+//   nodes: [...defNodes],
+//   edges: [...defEdges],
+//   options: {
+//     nodes: {
+//       shape: "circle",
+//       size: 24,
+//       color: {
+//         border: "grey",
+//         highlight: {
+//           border: "black",
+//           background: "white",
+//         },
+//         hover: {
+//           border: "orange",
+//           background: "grey",
+//         },
+//       },
+//       font: { color: "black" },
+//       shapeProperties: {
+//         useBorderWithImage: true,
+//       },
+//     },
+//   },
+// });
 const network = ref<{
   nodes: Node[];
   edges: Edge[];
@@ -37,26 +66,67 @@ const network = ref<{
   options: {
     nodes: {
       shape: "circle",
-      size: 24,
+      size: 32,  // 增大节点尺寸
+      borderWidth: 2.5,  // 加粗边框
+      shadow: {
+        enabled: true,
+        color: 'rgba(147, 197, 253, 0.3)',  // 蓝色阴影
+        size: 10,
+        x: 3,
+        y: 3
+      },
       color: {
-        border: "grey",
+        background: 'rgba(255, 255, 255, 0.8)',  // 半透明白色背景
+        border: '#93C5FD',  // Tailwind blue-300
         highlight: {
-          border: "black",
-          background: "white",
+          background: 'rgba(255, 255, 255, 0.9)',  // 高亮时更白
+          border: '#3B82F6',  // Tailwind blue-500
         },
         hover: {
-          border: "orange",
-          background: "grey",
-        },
+          background: 'rgba(219, 234, 254, 0.7)',  // Tailwind blue-100 带透明度
+          border: '#60A5FA'  // Tailwind blue-400
+        }
       },
-      font: { color: "black" },
+      font: {
+        color: '#1E3A8A',  // Tailwind blue-900
+        size: 14,
+        face: 'Inter, system-ui, sans-serif'  // 与侧边栏字体一致
+      },
       shapeProperties: {
         useBorderWithImage: true,
-      },
+        borderRadius: 8  // 圆角效果
+      }
     },
-  },
+    edges: {
+      color: {
+        color: '#BFDBFE',  // Tailwind blue-200
+        highlight: '#3B82F6',  // 高亮时使用蓝色
+        hover: '#60A5FA'
+      },
+      width: 2.5,
+      arrows: {
+        to: {
+          enabled: true,
+          scaleFactor: 0.6  // 箭头大小
+        }
+      },
+      dashes: false,
+      shadow: {
+        enabled: true,
+        color: 'rgba(147, 197, 253, 0.2)',
+        size: 5
+      }
+    },
+    // 高亮显示聚焦时的线段
+    interaction: {
+      hover: true,
+      tooltipDelay: 200,
+      multiselect: true,
+      selectConnectedEdges: false
+    },
+   
+  }
 });
-
 // 处理网络图事件
 const networkEvent = (...args: any[]) => {
   if (args[0] === "click") {
