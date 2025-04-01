@@ -25,37 +25,6 @@ const defEdges: Edge[] = [
   { id: 3, from: 2, to: 4 },
   { id: 4, from: 2, to: 5 },
 ];
-
-// 定义网络图的数据和配置
-// const network = ref<{
-//   nodes: Node[];
-//   edges: Edge[];
-//   options: Options;
-// }>({
-//   nodes: [...defNodes],
-//   edges: [...defEdges],
-//   options: {
-//     nodes: {
-//       shape: "circle",
-//       size: 24,
-//       color: {
-//         border: "grey",
-//         highlight: {
-//           border: "black",
-//           background: "white",
-//         },
-//         hover: {
-//           border: "orange",
-//           background: "grey",
-//         },
-//       },
-//       font: { color: "black" },
-//       shapeProperties: {
-//         useBorderWithImage: true,
-//       },
-//     },
-//   },
-// });
 const network = ref<{
   nodes: Node[];
   edges: Edge[];
@@ -122,7 +91,8 @@ const network = ref<{
       hover: true,
       tooltipDelay: 200,
       multiselect: true,
-      selectConnectedEdges: false
+      selectConnectedEdges: true
+      
     },
    
   }
@@ -267,9 +237,9 @@ onMounted(() => {
 <template>
   <!-- 主要的模板代码 -->
   <div class="w-screen h-screen relative">
-    <vue-vis-network
+      <vue-vis-network
       ref="networkRef"
-      class="w-full bg-white h-full"
+      class="w-full bg-white h-full network-background"
       :nodes="network.nodes"
       :edges="network.edges"
       :options="network.options"
@@ -279,10 +249,11 @@ onMounted(() => {
       @deselect-node="networkEvent('deselectNode', $event)"
     >
     </vue-vis-network>
+  
     <aside class="absolute top-10 left-10 z-10 isolate">
       <!-- 主导航 -->
       <nav
-        class="nav flex flex-col bg-blue-100/80 backdrop-blur-sm rounded-xl shadow-lg p-4 space-y-2 w-48 transition-all duration-200 border border-blue-200/50 hover:shadow-xl hover:bg-blue-100/90"
+        class="nav flex flex-col bg-blue-100/80 backdrop-blur-xs rounded-xl shadow-lg p-4 space-y-2 w-48 transition-all duration-200 border border-blue-200/50 hover:shadow-xl hover:bg-blue-100/90"
       >
         <!-- Add Node 按钮 -->
         <button
@@ -335,7 +306,7 @@ onMounted(() => {
 
       <!-- Combine 面板 -->
       <div
-        class="flex flex-col gap-2 mt-4 px-4 py-3 bg-blue-100/80 backdrop-blur-sm rounded-xl border border-blue-200/50 shadow-lg transition-all duration-200"
+        class="flex flex-col gap-2 mt-4 px-4 py-3 bg-blue-100/80 backdrop-blur-xs rounded-xl border border-blue-200/50 shadow-lg transition-all duration-200"
         :hidden="myAppDataStore.isHiddenCombineNav"
       >
         <header class=" font-sans mr-2 text-gl font-bold text-blue-900">Combine</header>
@@ -396,4 +367,27 @@ onMounted(() => {
   </div>
 </template>
 
-<style></style>
+<style scoped>
+/* 网格背景容器 */
+.network-background {
+  background-image: 
+    linear-gradient(rgba(220, 220, 220, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(220, 220, 220, 0.15) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .network-background {
+    background-image: 
+      linear-gradient(rgba(100, 100, 100, 0.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100, 100, 100, 0.15) 1px, transparent 1px);
+  }
+}
+
+/* 画布透明处理 */
+:deep(.vis-network) canvas {
+  background-color: transparent !important;
+}
+</style>
