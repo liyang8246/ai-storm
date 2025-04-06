@@ -5,27 +5,36 @@ import type { Edge, Node, Options } from "vis-network";
 // 导入应用数据存储
 import { useMyAppDataStore } from "@/stores/appData";
 
+// 导入类型
+interface NodeData {
+  id: number | string;
+  label: string;
+  edges?: EdgeData[];
+}
+
+interface EdgeData {
+  id: number | string;
+  from: number | string;
+  to: number | string;
+  label: string;
+}
+
 // 初始化应用数据存储
 const myAppDataStore = useMyAppDataStore();
 
 // 定义网络图的引用
 const networkRef = ref();
-
-// 定义默认的节点和边
-const defNodes: Node[] = [
-  { id: 1, label: "Node 1" },
-  { id: 2, label: "Node 2" },
-  { id: 3, label: "Node 3" },
-  { id: 4, label: "Node 4" },
-  { id: 5, label: "Node 5" },
-];
-const defEdges: Edge[] = [
-  { id: -1, from: 0, to: 0 },
-  { id: 1, from: 1, to: 3 },
-  { id: 2, from: 1, to: 2 },
-  { id: 3, from: 2, to: 4 },
-  { id: 4, from: 2, to: 5 },
-];
+const { nodes, edges } = await $fetch("/api/network");
+const defNodes:Node[] = nodes.map(node => ({
+  id: node.id,
+  label: node.label,
+}))
+const defEdges:Edge[] = edges.map(edge => ({
+  id: edge.id,
+  from: edge.from,
+  to: edge.to,
+  label: edge.label
+}))
 const network = ref<{
   nodes: Node[];
   edges: Edge[];
@@ -82,6 +91,14 @@ const network = ref<{
       },
     },
     edges: {
+      font: {
+        color: "#1E3A8A", // 使用与节点相同的深蓝色
+        size: 12, // 稍小于节点文字
+        face: "Inter, system-ui, sans-serif",
+        align: "horizontal",
+        strokeWidth: 2, // 文字描边增强可读性
+      },
+      labelHighlightBold: false, // 禁用高亮加粗
       color: {
         color: "#BFDBFE", // Tailwind blue-200
         highlight: "#3B82F6", // 高亮时使用蓝色
@@ -131,20 +148,22 @@ const networkEvent = (...args: any[]) => {
     myAppDataStore.selectedNode = args[1].nodes[0];
   }
   if (args[0] === "nodes-add") {
-    console.log(args[0]);
+    console.log(args[1]);
+    console.log(network.value.nodes);
+    console.log(network.value.edges);
   }
   if (args[0] === "selectNode") {
-    console.log(args[0]);
+    console.log(args[1]);
     // myAppDataStore.isHiddenNav = false;
   }
   if (args[0] === "deselectNode") {
-    console.log(args[0]);
+    console.log(args[1]);
     // myAppDataStore.isHiddenNav = true;
   }
 };
 
 // 添加节点
-const addNode = () => {
+const addNode = async () => {
   if (!network.value.nodes.length) {
     network.value.nodes.push({
       id: 1,
@@ -152,29 +171,34 @@ const addNode = () => {
     });
     return;
   }
-  if (!myAppDataStore.selectedNode) {
-    alert("Please select a node first");
-    return;
+  const selectedId = myAppDataStore.selectedNode;
+  if (!selectedId) return alert("请先选择父节点");
+
+  try {
+    const response: NodeData = await $fetch("/api/nodes", {
+      method: "POST",
+      body: {
+        parentId: selectedId,
+      },
+    });
+
+    // 更新前端数据
+    network.value.nodes.push({
+      id: response.id,
+      label: response.label,
+    });
+    response.edges?.forEach(edge => {
+      network.value.edges.push({
+        id: edge.id,
+        from: edge.from,
+        to: edge.to,
+        label: edge.label
+      })
+    });
+  } catch (error) {
+    console.error("节点创建失败:", error);
+    alert("创建失败，请稍后重试");
   }
-  const newNodeId =
-    (network.value.nodes[network.value.nodes.length - 1].id as number) + 1;
-  const newNodeLabel =
-    "Node " +
-    ((network.value.nodes[network.value.nodes.length - 1].id as number) + 1);
-  const wrappedLabel = insertLineBreaks(newNodeLabel, 8); // 每8字符换行
-  network.value.nodes.push({
-    id: newNodeId,
-    label: wrappedLabel,
-  });
-  const n1 = myAppDataStore.selectedNode;
-  const n2 = network.value.nodes[network.value.nodes.length - 1].id as number;
-  const newEdgeId =
-    (network.value.edges[network.value.edges.length - 1].id as number) + 1;
-  network.value.edges.push({
-    id: newEdgeId,
-    from: n1,
-    to: n2,
-  });
 };
 
 // 切换合并节点的显示状态
@@ -201,7 +225,7 @@ const removeNode = (selectedNodeId: number | undefined) => {
 };
 
 // 重置网络图
-const resetNetwork = () => {
+const resetNetwork = async () => {
   network.value = {
     nodes: [...defNodes],
     edges: [...defEdges],
@@ -212,68 +236,46 @@ const resetNetwork = () => {
 // 输入值的引用
 const selectedNode1 = ref(null);
 const selectedNode2 = ref(null);
-
 // 合并节点
-const Combine = () => {
+const Combine = async () => {
   // 验证选择有效性
-  if (!selectedNode1.value || !selectedNode2.value) {
-    alert("Please select two nodes first");
-    return;
-  }
+  const nodeIds = [selectedNode1.value, selectedNode2.value];
+  const node1 = network.value.nodes.find(
+    (node) => node.id === selectedNode1.value
+  );
+  const node2 = network.value.nodes.find(
+    (node) => node.id === selectedNode2.value
+  );
+  if (nodeIds.some((id) => !id)) return alert("请选择两个节点");
+  if (selectedNode1.value === selectedNode2.value)
+    return alert("请选择两个不同的节点");
+  try {
+    const response: NodeData = await $fetch("/api/combine", {
+      method: "POST",
+      body: { nodeIds, node1, node2 },
+    });
 
-  if (selectedNode1.value === selectedNode2.value) {
-    alert("Please select two different nodes");
-    return;
-  }
-  console.log(selectedNode1.value, selectedNode2.value);
-
-  // 获取选择的节点对象
-  const n1 = network.value.nodes.find((n) => n.id === selectedNode1.value);
-  const n2 = network.value.nodes.find((n) => n.id === selectedNode2.value);
-
-  console.log(n1, n2);
-  if (n1 && n2) {
-    const newNodeId =
-      (network.value.nodes[network.value.nodes.length - 1].id as number) + 1;
-    const newNodeLabel =
-      "Node " +
-      ((network.value.nodes[network.value.nodes.length - 1].id as number) + 1);
-    const wrappedLabel = insertLineBreaks(newNodeLabel, 8); // 每8字符换行
     network.value.nodes.push({
-      id: newNodeId,
-      label: wrappedLabel,
+      id: response.id,
+      label: response.label,
     });
-    const n3 = network.value.nodes[network.value.nodes.length - 1].id as number;
-    const newEdgeId1 =
-      (network.value.edges[network.value.edges.length - 1].id as number) + 1;
-    const newEdgeId2 =
-      (network.value.edges[network.value.edges.length - 1].id as number) + 2;
-    network.value.edges.push({
-      id: newEdgeId1,
-      from: n1.id,
-      to: n3,
-    });
-    network.value.edges.push({
-      id: newEdgeId2,
-      from: n2.id,
-      to: n3,
-    });
+    response.edges?.forEach(edge => {
+      network.value.edges.push({
+        id: edge.id,
+        from: edge.from,
+        to: edge.to,
+        label: edge.label
+      })
+    })
+    // 重置状态
     myAppDataStore.isHiddenCombineNav = true;
     selectedNode1.value = null;
     selectedNode2.value = null;
+  } catch (error) {
+    console.error("合并失败:", error);
+    alert("合并操作失败");
   }
 };
-
-// 组件挂载后执行
-onMounted(() => {
-  const network = networkRef.value.network;
-  // if you want access to vis.js network api
-  console.log(network);
-  // getNode(id) to get node
-  console.log("getNode-1: ", networkRef.value.getNode(1));
-  // getEdge(id) to get edge
-  console.log("getEdge-1: ", networkRef.value.getEdge(1));
-});
 </script>
 
 <template>
