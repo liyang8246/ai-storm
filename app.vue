@@ -185,14 +185,14 @@ const addNode = async () => {
     // 更新前端数据
     network.value.nodes.push({
       id: response.id,
-      label: response.label,
+      label: insertLineBreaks(response.label,8),
     });
     response.edges?.forEach(edge => {
       network.value.edges.push({
         id: edge.id,
         from: edge.from,
         to: edge.to,
-        label: edge.label
+        label: insertLineBreaks(edge.label,8)
       })
     });
   } catch (error) {
@@ -257,14 +257,14 @@ const Combine = async () => {
 
     network.value.nodes.push({
       id: response.id,
-      label: response.label,
+      label: insertLineBreaks(response.label,8),
     });
     response.edges?.forEach(edge => {
       network.value.edges.push({
         id: edge.id,
         from: edge.from,
         to: edge.to,
-        label: edge.label
+        label: insertLineBreaks(edge.label,8)
       })
     })
     // 重置状态
