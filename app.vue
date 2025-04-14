@@ -25,16 +25,16 @@ const myAppDataStore = useMyAppDataStore();
 // 定义网络图的引用
 const networkRef = ref();
 const { nodes, edges } = await $fetch("/api/network");
-const defNodes:Node[] = nodes.map(node => ({
+const defNodes: Node[] = nodes.map((node) => ({
   id: node.id,
   label: node.label,
-}))
-const defEdges:Edge[] = edges.map(edge => ({
+}));
+const defEdges: Edge[] = edges.map((edge) => ({
   id: edge.id,
   from: edge.from,
   to: edge.to,
-  label: edge.label
-}))
+  label: edge.label,
+}));
 const network = ref<{
   nodes: Node[];
   edges: Edge[];
@@ -185,15 +185,15 @@ const addNode = async () => {
     // 更新前端数据
     network.value.nodes.push({
       id: response.id,
-      label: insertLineBreaks(response.label,8),
+      label: insertLineBreaks(response.label, 8),
     });
-    response.edges?.forEach(edge => {
+    response.edges?.forEach((edge) => {
       network.value.edges.push({
         id: edge.id,
         from: edge.from,
         to: edge.to,
-        label: insertLineBreaks(edge.label,8)
-      })
+        label: insertLineBreaks(edge.label, 8),
+      });
     });
   } catch (error) {
     console.error("节点创建失败:", error);
@@ -257,16 +257,16 @@ const Combine = async () => {
 
     network.value.nodes.push({
       id: response.id,
-      label: insertLineBreaks(response.label,8),
+      label: insertLineBreaks(response.label, 8),
     });
-    response.edges?.forEach(edge => {
+    response.edges?.forEach((edge) => {
       network.value.edges.push({
         id: edge.id,
         from: edge.from,
         to: edge.to,
-        label: insertLineBreaks(edge.label,8)
-      })
-    })
+        label: insertLineBreaks(edge.label, 8),
+      });
+    });
     // 重置状态
     myAppDataStore.isHiddenCombineNav = true;
     selectedNode1.value = null;
@@ -275,6 +275,13 @@ const Combine = async () => {
     console.error("合并失败:", error);
     alert("合并操作失败");
   }
+};
+
+const clearNetWork = () => {
+  network.value.nodes = [];
+  network.value.edges = [];
+  myAppDataStore.selectedNode = undefined;
+  myAppDataStore.isHiddenCombineNav = true;
 };
 </script>
 
@@ -340,11 +347,17 @@ const Combine = async () => {
         <div class="border-t border-blue-200/50 my-2"></div>
 
         <!-- Reset 按钮 -->
-        <button
+        <!-- <button
           @click="resetNetwork"
           class="px-4 py-2 text-sm font-medium text-red-700 bg-white/50 hover:bg-red-100/30 rounded-lg border border-red-200/50 hover:border-red-300 transition-colors duration-200 shadow-sm"
         >
           Reset
+        </button> -->
+        <button
+          @click="clearNetWork"
+          class="px-4 py-2 text-sm font-medium text-red-700 bg-white/50 hover:bg-red-100/30 rounded-lg border border-red-200/50 hover:border-red-300 transition-colors duration-200 shadow-sm"
+        >
+          Clear
         </button>
       </nav>
 

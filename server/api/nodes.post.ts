@@ -12,6 +12,5 @@ export default defineEventHandler(async (event) => {
       label: '关联关系'
     }]
   }
-
   return newNode
 })
