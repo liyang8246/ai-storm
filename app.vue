@@ -24,17 +24,8 @@ const myAppDataStore = useMyAppDataStore();
 
 // 定义网络图的引用
 const networkRef = ref();
-const { nodes, edges } = await $fetch("/api/network");
-const defNodes: Node[] = nodes.map((node) => ({
-  id: node.id,
-  label: node.label,
-}));
-const defEdges: Edge[] = edges.map((edge) => ({
-  id: edge.id,
-  from: edge.from,
-  to: edge.to,
-  label: edge.label,
-}));
+const defNodes: Node[] = [];
+const defEdges: Edge[] = [];
 const network = ref<{
   nodes: Node[];
   edges: Edge[];
@@ -162,14 +153,17 @@ const networkEvent = (...args: any[]) => {
   }
 };
 
+const keyWord = ref("");
 // 添加节点
-const addNode = async () => {
-  if (!network.value.nodes.length) {
+const addNode = async (key?: string) => {
+  if (myAppDataStore.nodesLength == 0 && key) {
     network.value.nodes.push({
       id: 1,
-      label: "Node1",
+      label: key,
     });
+    keyWord.value = ""; // 清空输入框
     return;
+    
   }
   const selectedId = myAppDataStore.selectedNode;
   if (!selectedId) return alert("请先选择父节点");
@@ -277,12 +271,17 @@ const Combine = async () => {
   }
 };
 
+// 清除网络图数据
 const clearNetWork = () => {
   network.value.nodes = [];
   network.value.edges = [];
   myAppDataStore.selectedNode = undefined;
   myAppDataStore.isHiddenCombineNav = true;
 };
+onUpdated(() => {
+  // 监听网络图的变化
+  myAppDataStore.nodesLength = network.value.nodes.length;
+});
 </script>
 
 <template>
@@ -306,9 +305,25 @@ const clearNetWork = () => {
       <nav
         class="nav flex flex-col bg-blue-100/80 backdrop-blur-xs rounded-xl shadow-lg p-4 space-y-2 w-48 transition-all duration-200 border border-blue-200/50 hover:shadow-xl hover:bg-blue-100/90"
       >
+        <div v-if="myAppDataStore.nodesLength == 0" class="flex gap-2 mb-2">
+          <!-- 添加横向间距 -->
+          <input
+            v-model="keyWord"
+            type="text"
+            class="w-full px-4 py-2 text-sm bg-white/50 border border-blue-200/50 rounded-lg shadow-sm placeholder:text-blue-400/70 focus:ring-2 focus:ring-blue-300/50 focus:border-blue-300 transition-all duration-200 hover:border-blue-300/80"
+            placeholder="输入关键词"
+          />
+          <button
+            @click="addNode(keyWord)"
+            class="px-4 py-2 text-sm font-medium text-blue-900 bg-white/50 hover:bg-blue-200/30 rounded-lg border border-blue-200/50 hover:border-blue-300 transition-colors duration-200 shadow-sm whitespace-nowrap"
+          >
+            √
+          </button>
+        </div>
         <!-- Add Node 按钮 -->
         <button
-          @click="addNode"
+          v-else="myAppDataStore.nodesLength > 0"
+          @click="addNode()"
           class="flex items-center px-4 py-2 text-sm font-medium text-blue-900 bg-white/50 hover:bg-blue-200/30 rounded-lg transition-all duration-200 border border-blue-200/50 hover:border-blue-300 hover:text-blue-700 shadow-sm"
         >
           <svg

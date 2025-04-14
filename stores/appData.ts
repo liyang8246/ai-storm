@@ -6,6 +6,7 @@ export const useMyAppDataStore = defineStore('myAppDataStore',{
     selectedNode: undefined,
     // isHiddenNav: true,
     isHiddenCombineNav: true,
+    nodesLength: 0,
    }),
   actions: {}
 })
