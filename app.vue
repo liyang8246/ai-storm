@@ -259,7 +259,6 @@ onUpdated(() => {
   <!-- 主要的模板代码 -->
   <div class="w-screen h-screen relative">
     <vue-vis-network
-      ref="networkRef"
       class="w-full bg-white h-full network-background"
       :nodes="network.nodes"
       :edges="network.edges"
