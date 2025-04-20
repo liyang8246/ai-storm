@@ -133,10 +133,21 @@ const insertLineBreaks = (str: string, maxLength: number) => {
   return str.replace(new RegExp(`(.{${maxLength}})`, "g"), "$1\n");
 };
 // 处理网络图事件
+let clickTimer: number | null = null;
+
 const handleClick = (event: any) => {
-  console.log(event.nodes[0]);
-  myAppDataStore.selectedNode = event.nodes[0];
+  if (clickTimer) clearTimeout(clickTimer);
+  clickTimer = setTimeout(() => {
+    console.log('handleClick with node:', event.nodes[0]);
+    myAppDataStore.selectedNode = event.nodes[0];
+  }, 250);
 };
+
+const handleDoubleClick = (event: any) => {
+  if (clickTimer) clearTimeout(clickTimer);
+  clickTimer = null;
+  console.log('handleDoubleClick with node:', event.nodes[0]);
+}
 
 const keyWord = ref("");
 // 添加节点
@@ -264,6 +275,7 @@ onUpdated(() => {
       :edges="network.edges"
       :options="network.options"
       @click="handleClick($event)"
+      @double-click="handleDoubleClick($event)"
     >
     </vue-vis-network>
 
