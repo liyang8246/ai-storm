@@ -153,31 +153,26 @@ const addNode = async (key?: string) => {
   const selectedId = myAppDataStore.selectedNode;
   if (!selectedId) return alert("请先选择父节点");
 
-  try {
-    const response: NodeData = await $fetch("/api/nodes", {
-      method: "POST",
-      body: {
-        parentId: selectedId,
-      },
-    });
+  const response: NodeData = await $fetch("/api/nodes", {
+    method: "POST",
+    body: {
+      parentId: selectedId,
+    },
+  });
 
-    // 更新前端数据
-    network.value.nodes.push({
-      id: response.id,
-      label: insertLineBreaks(response.label, 8),
+  // 更新前端数据
+  network.value.nodes.push({
+    id: response.id,
+    label: insertLineBreaks(response.label, 8),
+  });
+  response.edges?.forEach((edge) => {
+    network.value.edges.push({
+      id: edge.id,
+      from: edge.from,
+      to: edge.to,
+      label: insertLineBreaks(edge.label, 8),
     });
-    response.edges?.forEach((edge) => {
-      network.value.edges.push({
-        id: edge.id,
-        from: edge.from,
-        to: edge.to,
-        label: insertLineBreaks(edge.label, 8),
-      });
-    });
-  } catch (error) {
-    console.error("节点创建失败:", error);
-    alert("创建失败，请稍后重试");
-  }
+  });
 };
 
 // 切换合并节点的显示状态
