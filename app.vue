@@ -198,15 +198,6 @@ const removeNode = (selectedNodeId: number | undefined) => {
   }
 };
 
-// 重置网络图
-const resetNetwork = async () => {
-  network.value = {
-    nodes: [...defNodes],
-    edges: [...defEdges],
-    options: {},
-  };
-};
-
 // 输入值的引用
 const selectedNode1 = ref(null);
 const selectedNode2 = ref(null);
