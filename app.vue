@@ -133,24 +133,9 @@ const insertLineBreaks = (str: string, maxLength: number) => {
   return str.replace(new RegExp(`(.{${maxLength}})`, "g"), "$1\n");
 };
 // 处理网络图事件
-const networkEvent = (...args: any[]) => {
-  if (args[0] === "click") {
-    console.log(args[1].nodes[0]);
-    myAppDataStore.selectedNode = args[1].nodes[0];
-  }
-  if (args[0] === "nodes-add") {
-    console.log(args[1]);
-    console.log(network.value.nodes);
-    console.log(network.value.edges);
-  }
-  if (args[0] === "selectNode") {
-    console.log(args[1]);
-    // myAppDataStore.isHiddenNav = false;
-  }
-  if (args[0] === "deselectNode") {
-    console.log(args[1]);
-    // myAppDataStore.isHiddenNav = true;
-  }
+const handleClick = (event: any) => {
+  console.log(event.nodes[0]);
+  myAppDataStore.selectedNode = event.nodes[0];
 };
 
 const keyWord = ref("");
@@ -293,10 +278,7 @@ onUpdated(() => {
       :nodes="network.nodes"
       :edges="network.edges"
       :options="network.options"
-      @click="networkEvent('click', $event)"
-      @nodes-add="networkEvent('nodes-add', $event)"
-      @select-node="networkEvent('selectNode', $event)"
-      @deselect-node="networkEvent('deselectNode', $event)"
+      @click="handleClick($event)"
     >
     </vue-vis-network>
 
