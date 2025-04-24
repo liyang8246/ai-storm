@@ -19,15 +19,19 @@ interface EdgeData {
   label: string;
 }
 
+interface MyNode extends Node {
+  disavilable?: boolean;
+}
+
 // 初始化应用数据存储
 const myAppDataStore = useMyAppDataStore();
 
 // 定义网络图的引用
 const networkRef = ref();
-const defNodes: Node[] = [];
+const defNodes: MyNode[] = [];
 const defEdges: Edge[] = [];
 const network = ref<{
-  nodes: Node[];
+  nodes: MyNode[];
   edges: Edge[];
   options: Options;
 }>({
@@ -139,6 +143,16 @@ const handleClick = (event: any) => {
   if (clickTimer) clearTimeout(clickTimer);
   clickTimer = setTimeout(() => {
     console.log('handleClick with node:', event.nodes[0]);
+    for (let i = 0; i < network.value.nodes.length; i++) {
+      if (network.value.nodes[i].id != event.nodes[0]) continue;
+      if (network.value.nodes[i].disavilable) {
+        network.value.nodes[i].disavilable = false;
+        network.value.nodes[i].font = { color: '#000000' };
+      } else {
+        network.value.nodes[i].disavilable = true;
+        network.value.nodes[i].font = { color: '#AAAAAA' };
+      }
+    }
     myAppDataStore.selectedNode = event.nodes[0];
   }, 250);
 };
