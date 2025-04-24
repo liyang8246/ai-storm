@@ -161,11 +161,15 @@ const handleDoubleClick = (event: any) => {
   if (clickTimer) clearTimeout(clickTimer);
   clickTimer = null;
   console.log('handleDoubleClick with node:', event.nodes[0]);
+  for (let i = 0; i < network.value.nodes.length; i++) {
+    if (network.value.nodes[i].id != event.nodes[0]) continue;
+    addNode(null, {id:network.value.nodes[i].id,  label: network.value.nodes[i].label})
+  }
 }
 
 const keyWord = ref("");
 // 添加节点
-const addNode = async (key?: string) => {
+const addNode = async (key?: string, parent?: {id: number | string, label: string}) => {
   if (myAppDataStore.nodesLength == 0 && key) {
     network.value.nodes.push({
       id: 1,
@@ -175,17 +179,14 @@ const addNode = async (key?: string) => {
     return;
     
   }
-  const selectedId = myAppDataStore.selectedNode;
-  if (!selectedId) return alert("请先选择父节点");
 
   const response: NodeData = await $fetch("/api/nodes", {
     method: "POST",
     body: {
-      parentId: selectedId,
+      parent: parent,
     },
   });
 
-  // 更新前端数据
   network.value.nodes.push({
     id: response.id,
     label: insertLineBreaks(response.label, 8),
